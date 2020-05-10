@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Intrepid.AspNetCore.Identity.Admin.Models;
+using System.Security.Claims;
+using System.Reflection;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
@@ -85,6 +87,56 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
             return View(vm);
         }
 
+        public IActionResult AddUser(UserForCreationModel model)
+        {
+            ModelState.Clear();
+
+            return View();
+        }
+
+        public IActionResult GetUser()
+        {
+            UserViewModel vm = new UserViewModel()
+            {
+                User = new UserForReadModel()
+                {
+                    UserId = "1",
+                    Email = "john@intrepiddevops.com",
+                    AccessFailedCount = 0,
+                    IsEmailConfirmed = true,
+                    IsPhoneConfirmed = true,
+                    IsTwoFactorEnabled = false,
+                    IsLockoutEnabled = true,
+                    Username = "john@intrepiddevops.com",
+                    Phone = "0000000000",
+                    LockoutEnd = null,
+                    Roles = new List<RoleForReadModel>()
+                    {
+                        new RoleForReadModel()
+                        {
+                            RoleId = "1",
+                            Name = "Administrator",
+                        },
+                        new RoleForReadModel()
+                        {
+                            RoleId = "2",
+                            Name = "Super User"
+                        }
+                    },
+                    Claims = new List<ClaimForReadModel>()
+                    {
+                        new ClaimForReadModel()
+                        {
+                            Name = ClaimTypes.NameIdentifier,
+                            Value = "1"
+                        }
+                    }
+                }
+            };
+
+            return View(vm);
+        }
+
         public IActionResult Roles()
         {
             RolesViewModel vm = new RolesViewModel()
@@ -115,7 +167,27 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
         
         public IActionResult Claims()
         {
-            return View();
+            ClaimsViewModel vm = new ClaimsViewModel();
+
+            foreach (FieldInfo field in typeof(ClaimTypes).GetFields())
+            {
+                vm.GridData.Add(new ClaimGridRowModel()
+                {
+                    ClaimId = null,
+                    Name = field.Name,
+                    Value = (string)field.GetValue(null),
+                    IsReadOnly = true
+                });
+            }
+
+            vm.GridControl = new GridControlModel()
+            {
+                PageSize = 10,
+                CurrentPage = 1,
+                TotalRecords = 2
+            };
+
+            return View(vm);
         }
 
         public IActionResult Settings()
