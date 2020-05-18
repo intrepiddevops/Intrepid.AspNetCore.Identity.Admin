@@ -11,7 +11,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers
     {
         public IdentityUserProfile()
         {
-            CreateMap<IdentityUser, IdentityUserDTO>();
+            CreateMap<IdentityUser, IdentityUserDTO>().ReverseMap(); ;
         }
     }
 }

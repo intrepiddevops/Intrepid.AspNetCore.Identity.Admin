@@ -6,25 +6,20 @@ using Microsoft.Extensions.Logging;
 using Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace Intrepid.AspNetCore.Identity.Admin.UnitTest
 {
-    [Collection("Database collection")]
-    public class IdentityServiceTest
+    
+    public class GenericTest:TestBaseClass
     {
-        DatabaseFixture fixture;
-        public IdentityServiceTest(DatabaseFixture fixture)
+        public GenericTest(DatabaseFixture fixture):base(fixture)
         {
-            this.fixture = fixture;
         }
         [Fact]
-        public async Task<bool> Test1()
+        public async Task<bool> TestFixure()
         {
-            
-            var service = new IdentityService(this.fixture.Provider.GetService<IdentityDbContext>(),
-                this.fixture.Provider.GetService<IMapper>(), this.fixture.Provider.GetService<ILogger<IdentityService>>()) ;
-            var result=await service.SearchUser(string.Empty, "steve");
-            Assert.True(result.Count==0, "funfun");
+            Assert.True(true, "Incorrect Setup");
             return true;
         }
     }

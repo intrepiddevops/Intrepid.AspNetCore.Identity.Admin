@@ -2,6 +2,7 @@
 using Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers;
 using Intrepid.AspNetCore.Identity.Admin.Database.SQLServer.Extensions;
 using MartinCostello.SqlLocalDb;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -61,6 +62,12 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest
             //add the mapper
             ServiceCollection.AddAutoMapper(typeof(IdentityUserProfile).Assembly);
             ServiceCollection.RegisterSqlServerDbContexts<IdentityDbContext>(config.GetConnectionString("DefaultConnection"));
+            ServiceCollection.AddIdentity<IdentityUser, IdentityRole>(option => {
+                option.Password.RequireUppercase = true;
+                option.Password.RequireNonAlphanumeric = false;
+            })
+            .AddEntityFrameworkStores<IdentityDbContext>();
+            //ServiceCollection.AddScoped<UserManager<IdentityUser>>();
         }
 
         private void CreateOrStartLocalDBInstances()
@@ -83,12 +90,18 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest
             {
                 adminInstance.Manage().Start();
             }
-            using var connection=adminInstance.CreateConnection();
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = $"Create DATABASE {AdminDB}";
-            command.ExecuteNonQuery();
-            connection.Close();
+            try
+            {
+                using var connection = adminInstance.CreateConnection();
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = $"Create DATABASE {AdminDB}";
+                command.ExecuteNonQuery();
+                connection.Close();
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         public void Dispose()
         {
