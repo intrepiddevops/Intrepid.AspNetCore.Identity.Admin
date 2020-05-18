@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Intrepid.AspNetCore.Identity.Admin.Common.Extensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -79,35 +80,60 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         {
             var resultDto = new ResultDTO<IdentityUserDTO>();
             resultDto.IsSuccess = false;
-            try
+            using (var transaction = await this.Context.Database.BeginTransactionAsync())
             {
-                var user = this.Mapper.Map<IdentityUser>(userDto);
-                if (!Manager.SupportsQueryableUsers)
-                    throw new Exception("Does not support Queryable Users");
-                var result = await Manager.CreateAsync(user, password);
-                
-                if (result.Succeeded)
+                try
                 {
-                    //fetch by the new created user
-                    resultDto.ReturnObject = this.Mapper.Map<IdentityUserDTO>(await this.Manager.FindByIdAsync(user.Id));
-                    resultDto.IsSuccess = true;
+
+                    var user = this.Mapper.Map<IdentityUser>(userDto);
+                    if (!Manager.SupportsQueryableUsers)
+                        throw new Exception("Does not support Queryable Users");
+                    var result = await Manager.CreateAsync(user, password);
+
+                    if (result.Succeeded)
+                    {
+                        var createdUser = await this.Manager.FindByIdAsync(user.Id);
+                        //fetch by the new created user
+                        resultDto.ReturnObject = this.Mapper.Map<IdentityUserDTO>(createdUser);
+                        //before we completed, if there is new role mapping
+
+                        var roleResult = await this.Manager.AddToRolesAsync(createdUser, userDto.Roles);
+                        if (!roleResult.Succeeded)
+                        {
+                            resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
+                            throw new Exception("Role creation failed");
+                        }
+                        
+
+                        resultDto.IsSuccess = true;
+                    }
+                    else
+                    {
+                        resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
+                    }
+                    transaction.Commit();
+                    //at this point get the user one more time, to ensure
+                    if (resultDto.IsSuccess)
+                    {
+                        var createdUser2 = await this.Manager.FindByIdAsync(user.Id);
+                        resultDto.ReturnObject = this.Mapper.Map<IdentityUserDTO>(createdUser2);
+                        resultDto.ReturnObject.Roles = (await this.Manager.GetRolesAsync(createdUser2)).ToList();
+                    }
                 }
-                else
+                catch (DbUpdateException ex)
                 {
-                    resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
+                    transaction.Rollback();
+                    resultDto.DetailErrorException = ex.Message;
+                    resultDto.ErrorMsg.Add("DB Update Failure");
+                    Logger.LogError(ex, "SQL Update Exception");
                 }
-            }
-            catch(DbUpdateException ex)
-            {
-                resultDto.DetailErrorException = ex.Message;
-                resultDto.ErrorMsg.Add("DB Update Failure");
-                Logger.LogError(ex, "SQL Update Exception");
-            }
-            catch(Exception ex)
-            {
-                resultDto.DetailErrorException = ex.Message;
-                resultDto.ErrorMsg.Add("Generic Failure");
-                Logger.LogError(ex, "Generic Exception");
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    resultDto.DetailErrorException = ex.Message;
+                    resultDto.ErrorMsg.Add("Generic Failure");
+                    Logger.LogError(ex, "Generic Exception");
+                }
             }
             return resultDto;
         }
@@ -152,6 +178,88 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             }
             
             return resultDto;
+        }
+
+        public async Task<ResultDTO<IdentityUserDTO>> UpdateUser(IdentityUserDTO userDto)
+        {
+            var resultDTO = new ResultDTO<IdentityUserDTO>();
+            if (!string.IsNullOrEmpty(userDto.PasswordHash))
+            {
+                resultDTO.ErrorMsg.Add("Cannot update password hash");
+                return resultDTO;
+            }
+            using (var transaction = await this.Context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    //mapto identity user
+                    var updatedUserIncomgin = await this.Manager.FindByIdAsync(userDto.Id);
+                    
+
+                    //remove all the roles
+                    if (updatedUserIncomgin == null || updatedUserIncomgin.ConcurrencyStamp != userDto.ConcurrencyStamp)
+                    {
+                        resultDTO.ErrorMsg.Add("Cannot find user");
+                        return resultDTO;
+                    }
+                    
+                    var existingRoles = await this.Manager.GetRolesAsync(updatedUserIncomgin);
+                    
+                    var identityResult = await this.Manager.RemoveFromRolesAsync(updatedUserIncomgin, existingRoles);
+                    if (!identityResult.Succeeded)
+                    {
+                        resultDTO.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(identityResult.Errors);
+                        return resultDTO;
+                    }
+
+                    //ok all done, mapping the incoming to the new identity user
+                    //mapping the changes
+                    updatedUserIncomgin.Email = userDto.Email;
+                    updatedUserIncomgin.EmailConfirmed = userDto.EmailConfirmed;
+                    updatedUserIncomgin.NormalizedEmail = userDto.Email.ToUpper();
+                    updatedUserIncomgin.UserName = userDto.UserName;
+                    updatedUserIncomgin.NormalizedUserName = userDto.UserName.ToUpper();
+                    updatedUserIncomgin.PhoneNumber = userDto.PhoneNumber;
+                    updatedUserIncomgin.PhoneNumberConfirmed = userDto.PhoneNumberConfirmed;
+                    updatedUserIncomgin.TwoFactorEnabled = userDto.TwoFactorEnabled;
+                    
+
+
+
+                    identityResult = await this.Manager.UpdateAsync(updatedUserIncomgin);
+                    if (!identityResult.Succeeded)
+                    {
+                        resultDTO.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(identityResult.Errors);
+                        return resultDTO;
+                    }
+                    //repopulate the role
+
+                    identityResult = await this.Manager.AddToRolesAsync(updatedUserIncomgin, userDto.Roles);
+                    if (!identityResult.Succeeded)
+                    {
+                        resultDTO.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(identityResult.Errors);
+                        return resultDTO;
+                    }
+                    resultDTO.IsSuccess = true;
+                    transaction.Commit();
+
+                    if (resultDTO.IsSuccess)
+                    {
+                        var createdUser2 = await this.Manager.FindByIdAsync(userDto.Id);
+                        resultDTO.ReturnObject = this.Mapper.Map<IdentityUserDTO>(createdUser2);
+                        resultDTO.ReturnObject.Roles = (await this.Manager.GetRolesAsync(createdUser2)).ToList();
+                    }
+                    return resultDTO;
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Generic failure");
+                    resultDTO.GenericException = ex;
+                }
+            }
+            //ok all done
+            return resultDTO;
         }
     }
 }

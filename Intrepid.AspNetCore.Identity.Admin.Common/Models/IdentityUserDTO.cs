@@ -7,7 +7,10 @@ namespace Intrepid.AspNetCore.Identity.Admin.Common.Models
     public class IdentityUserDTO
     {
 
-
+        public IdentityUserDTO()
+        {
+            this.Roles = new List<string>();
+        }
         //
         // Summary:
         //     Gets or sets the date and time, in UTC, when any user lockout ends.
@@ -81,6 +84,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Common.Models
         //     Gets or sets the number of failed login attempts for the current user.
         public int AccessFailedCount { get; set; }
 
+        public List<string> Roles { get; set; }
         //
         // Summary:
         //     Returns the username for this user.

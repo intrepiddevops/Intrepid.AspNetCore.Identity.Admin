@@ -11,7 +11,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers
     {
         public IdentityUserProfile()
         {
-            CreateMap<IdentityUser, IdentityUserDTO>().ReverseMap();
+            CreateMap<IdentityUser, IdentityUserDTO>().ForMember(x => x.Roles, opt => opt.MapFrom(u=>new List<string>()));
+            CreateMap<IdentityUserDTO, IdentityUser>();
         }
     }
 }
