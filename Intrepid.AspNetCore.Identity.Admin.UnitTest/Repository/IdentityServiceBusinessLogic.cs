@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.UserRepository
+namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
 {
 
     public class IdentityServiceBusinessLogic : TestBaseClass
@@ -41,7 +41,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.UserRepository
 
             var result = await identityservice.CreateUser(requireCreatedIdentityUser, password);
             Assert.True(!result.IsSuccess, "create user success failure");
-            Assert.True(result.ErrorMsg.Count == 1 && !string.IsNullOrEmpty(result.ErrorMsg.First(x => x.Contains("PasswordRequiresUpper"))), "create user success failure");
+            Assert.True(result.IdentityError.Count == 1 && result.IdentityError.First(x => x.Code.Contains("PasswordRequiresUpper"))!=null, "create user success failure");
             //this is rather a dummy test, no point to test if password requirement is needed since it is identity implmenetaiton, this just demonstrate the unit testing purpose
             password = "passworD123";
             result = await identityservice.CreateUser(requireCreatedIdentityUser, password);

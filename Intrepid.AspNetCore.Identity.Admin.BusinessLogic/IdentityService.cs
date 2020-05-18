@@ -18,16 +18,17 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 {
     public class IdentityService: BaseClass
     {
-        
-        public IdentityService(UserManager<IdentityUser> manager, IdentityDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(manager, dbContext, mapper, logger)
+        public UserManager<IdentityUser> Manager { get; private set; }
+        public IdentityService(UserManager<IdentityUser> manager, IdentityDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(dbContext, mapper, logger)
         {
+            Manager = manager;
         }
 
 
-        public async Task<ResultDto<bool>> VerifyUserPassword(string userId, string password)
+        public async Task<ResultDTO<bool>> VerifyUserPassword(string userId, string password)
         {
             // i think in thoery we don't need to have this one, the only difference checkpassword also increment
-            var result = new ResultDto<bool>() { IsSuccess = false };
+            var result = new ResultDTO<bool>() { IsSuccess = false };
             using (var transaction = await Context.Database.BeginTransactionAsync())
             {
                 try
@@ -74,9 +75,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         }
 
 
-        public async Task<ResultDto<IdentityUserDTO>> CreateUser(IdentityUserDTO userDto, string password)
+        public async Task<ResultDTO<IdentityUserDTO>> CreateUser(IdentityUserDTO userDto, string password)
         {
-            var resultDto = new ResultDto<IdentityUserDTO>();
+            var resultDto = new ResultDTO<IdentityUserDTO>();
             resultDto.IsSuccess = false;
             try
             {
@@ -93,8 +94,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                 }
                 else
                 {
-
-                    resultDto.ErrorMsg = result.Errors.Select(x=>$"{x.Code}:{x.Description}").ToList();
+                    resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
                 }
             }
             catch(DbUpdateException ex)
@@ -112,9 +112,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return resultDto;
         }
 
-        public async Task<ResultDto<bool>> ChangeUserPassword(string userId, string currentPassword, string newPassword)
+        public async Task<ResultDTO<bool>> ChangeUserPassword(string userId, string currentPassword, string newPassword)
         {
-            var resultDto = new ResultDto<bool>
+            var resultDto = new ResultDTO<bool>
             {
                 IsSuccess = false
             };
@@ -134,7 +134,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                     if (!result.Succeeded)
                     {
                         await this.Manager.AccessFailedAsync(identityUser);
-                        resultDto.ErrorMsg = result.Errors.Select(x => $"{x.Code}:{x.Description}").ToList();
+                        resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
                     }
                     else
                     {

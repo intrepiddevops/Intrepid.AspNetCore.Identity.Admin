@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers
 {
-    public class IdentityUserProfile : Profile
+    public class IdentityRoleProfile : Profile
     {
-        public IdentityUserProfile()
+        public IdentityRoleProfile()
         {
-            CreateMap<IdentityUser, IdentityUserDTO>().ReverseMap();
+            CreateMap<IdentityRole, IdentityRoleDTO>().ReverseMap();
         }
     }
 }
