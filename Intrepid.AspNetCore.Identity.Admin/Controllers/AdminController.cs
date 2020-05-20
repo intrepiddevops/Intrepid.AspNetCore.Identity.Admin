@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
-    public class AdminController : Controller
+    public class AdminController : BaseController
     {
         /// <summary>
         /// Dashboard
