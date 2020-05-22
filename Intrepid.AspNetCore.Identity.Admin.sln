@@ -23,9 +23,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Handler", "Handler", "{1A3D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intrepid.AspNetCore.Identity.Admin.Handler", "Intrepid.AspNetCore.Identity.Admin.Handler\Intrepid.AspNetCore.Identity.Admin.Handler.csproj", "{FFA6666A-B8A1-440A-9D94-9ADDA7996FD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intrepid.AspNetCore.Identity.Admin.Database.PGSql", "Intrepid.AspNetCore.Identity.Admin.Database.PGSql\Intrepid.AspNetCore.Identity.Admin.Database.PGSql.csproj", "{DBCFAD47-953A-4BA5-9DA0-DEEB17F0659C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intrepid.AspNetCore.Identity.Admin.Database.PGSql", "Intrepid.AspNetCore.Identity.Admin.Database.PGSql\Intrepid.AspNetCore.Identity.Admin.Database.PGSql.csproj", "{DBCFAD47-953A-4BA5-9DA0-DEEB17F0659C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intrepid.AspNetCore.Identity.AdminPGSql", "Intrepid.AspNetCore.Identity.AdminPGSQL\Intrepid.AspNetCore.Identity.AdminPGSql.csproj", "{6761C1D6-58C5-450F-B3D1-7246F18EEB9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intrepid.AspNetCore.Identity.Admin.Configuration", "Intrepid.AspNetCore.Identity.Admin.Configuration\Intrepid.AspNetCore.Identity.Admin.Configuration.csproj", "{4DE99052-C9CA-40F0-A5C5-E02F399084E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +67,10 @@ Global
 		{6761C1D6-58C5-450F-B3D1-7246F18EEB9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6761C1D6-58C5-450F-B3D1-7246F18EEB9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6761C1D6-58C5-450F-B3D1-7246F18EEB9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DE99052-C9CA-40F0-A5C5-E02F399084E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DE99052-C9CA-40F0-A5C5-E02F399084E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DE99052-C9CA-40F0-A5C5-E02F399084E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DE99052-C9CA-40F0-A5C5-E02F399084E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

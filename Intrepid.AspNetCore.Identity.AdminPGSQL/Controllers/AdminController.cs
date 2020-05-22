@@ -8,9 +8,11 @@ using Microsoft.Extensions.Logging;
 using Intrepid.AspNetCore.Identity.Admin.Models;
 using System.Security.Claims;
 using System.Reflection;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
+    [Authorize(Policy = "AdminManagerRole")]
     public class AdminController : BaseController
     {
         /// <summary>

@@ -1,0 +1,28 @@
+{
+  "Users": [
+    {
+      "UserName": "admin@intrepiddevops.com",
+      "Email": "admin@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": [ "Admin" ]
+    },
+    {
+      "UserName": "user@intrepiddevops.com",
+      "Email": "user@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    }
+  ],
+  "Roles": [
+    {
+      "Name": "Admin",
+      "Claims": []
+    },
+    {
+      "Name": "Manager",
+      "Claims": []
+    }
+  ]
+}

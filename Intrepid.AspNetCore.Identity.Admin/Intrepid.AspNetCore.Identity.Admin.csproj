@@ -24,12 +24,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.BusinessLogic\Intrepid.AspNetCore.Identity.Admin.BusinessLogic.csproj" />
     <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.Common\Intrepid.AspNetCore.Identity.Admin.Common.csproj" />
+    <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.Configuration\Intrepid.AspNetCore.Identity.Admin.Configuration.csproj" />
     <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.Database.SQLServer\Intrepid.AspNetCore.Identity.Admin.Database.SQLServer.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
