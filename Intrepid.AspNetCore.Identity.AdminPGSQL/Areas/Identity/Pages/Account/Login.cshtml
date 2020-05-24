@@ -1,0 +1,113 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+<!-- Outer Row -->
+<div class="row justify-content-center">
+
+    <div class="col-xl-10 col-lg-12 col-md-9">
+
+        <div class="card o-hidden border-0 shadow-lg my-5">
+            <div class="card-body p-0">
+
+
+
+                <!-- Nested Row within Card Body -->
+                <div class="row">
+                    <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+                    <div class="col-lg-6">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h1 class="h4 text-gray-900 mb-4">Welcome Back!</h1>
+                            </div>
+                            <form class="user" form id="account" method="post">
+                                <div asp-validation-summary="All" class="text-danger"></div>
+                                <div class="form-group">
+                                    <input type="email" asp-for="Input.Email" class="form-control form-control-user" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Enter Email Address...">
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" asp-for="Input.Password" class="form-control form-control-user" id="exampleInputPassword" placeholder="Password">
+                                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox small">
+                                        <input type="checkbox" class="custom-control-input" id="customCheck" asp-for="Input.RememberMe">
+                                        <label class="custom-control-label" for="customCheck">Remember Me</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-user btn-block">Login</button>
+                                <hr>
+
+
+                                @{
+                                    if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                                    {
+                                        <div>
+                                            <p>
+                                                There are no external authentication services configured. See <a href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</a>
+                                                for details on setting up this ASP.NET application to support logging in via external services.
+                                            </p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                                            <div>
+                                                <p>
+                                                    @foreach (var provider in Model.ExternalLogins)
+                                                    {
+                                                        if (provider.Name.ToLower().Equals("facebook"))
+                                                        {
+                                                            <button type="submit" href="index.html" class="btn btn-facebook btn-user btn-block" name="provider" value="@provider.Name">
+                                                                <i class="fab fa-facebook-f fa-fw"></i> Login with Facebook
+                                                            </button>
+                                                        }
+                                                        else if (provider.Name.ToLower().Equals("google"))
+                                                        {
+                                                            <button type="submit" class="btn btn-google btn-user btn-block" name="provider" value="@provider.Name">
+                                                                <i class="fab fa-google fa-fw"></i> Login with Google
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                                        }
+
+                                                    }
+                                                </p>
+                                            </div>
+                                        </form>
+                                    }
+                                }
+                            </form>
+                            <hr>
+                            <div class="text-center">
+                                <a id="forgot-password" class="small" asp-page="./ForgotPassword">Forgot your password?</a>
+                            </div>
+                            <div class="text-center">
+                                <a asp-page="./Register" class="small" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                            </div>
+                            <div class="text-center">
+                                <a id="resend-confirmation" class="small" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
+
+

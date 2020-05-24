@@ -8,11 +8,17 @@ using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
-using Intrepid.AspNetCore.Identity.Admin.Data;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Intrepid.AspNetCore.Identity.Admin.Database.SQLServer.Extensions;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Intrepid.AspNetCore.Identity.Admin.Common.Settings;
+using Intrepid.AspNetCore.Identity.Admin.Configuration;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Intrepid.AspNetCore.Identity.Admin
 {
@@ -28,14 +34,19 @@ namespace Intrepid.AspNetCore.Identity.Admin
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.RegisterSqlServerDbContexts<IdentityDbContext>(Configuration.GetConnectionString("DefaultConnection"));
+
+            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<IdentityDbContext>();
+            //before continue ensure data is seeded
+            //testing
+            var  identityConfig = JsonConvert.DeserializeObject<IdentityDataConfiguration>(File.ReadAllText($@"{Environment.CurrentDirectory}\data\IdentityConfiguration.json"));
+            services.AddSingleton(identityConfig);
             services.AddControllersWithViews();
             services.AddRazorPages()
                 .AddRazorRuntimeCompilation();
+            this.RegisterPolicy(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -67,6 +78,17 @@ namespace Intrepid.AspNetCore.Identity.Admin
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+        }
+        
+        private void RegisterPolicy(IServiceCollection services)
+        {
+            var policy = new Policy();
+            this.Configuration.Bind("AdminPolicy", policy);
+            var policies=policy.Roles.Select(x => x.Role).ToList();
+            services.AddAuthorization(options =>
+                options.AddPolicy("AdminManagerRole", policy =>
+                    policy.RequireRole(policies))
+            ); 
         }
     }
 }
