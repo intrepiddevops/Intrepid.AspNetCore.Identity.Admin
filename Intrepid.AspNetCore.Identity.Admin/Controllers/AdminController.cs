@@ -9,45 +9,60 @@ using Intrepid.AspNetCore.Identity.Admin.Models;
 using System.Security.Claims;
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
+using AutoMapper;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
     [Authorize(Policy = "AdminManagerRole")]
     public class AdminController : BaseController
     {
+        public RoleService RoleService { get; }
+        public IMapper Mapper { get; }
+        public IdentityService IdentityService { get; }
+
+        public AdminController(RoleService roleService, IMapper mapepr, IdentityService identityService)
+        {
+            this.RoleService = roleService;
+            this.Mapper = mapepr;
+            this.IdentityService = identityService;
+        }
         /// <summary>
         /// Dashboard
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index()
+        public async Task< IActionResult> Index()
         {
+            var rolesOriginal = await RoleService.AllRoleInfo();
+            var roles = rolesOriginal.ReturnObject.Select(x => Mapper.Map<RoleCountModel>(x)).ToList();
+            var totoalCount = await this.IdentityService.UsersMetaData();
             DashboardViewModel vm = new DashboardViewModel()
             {
-                TotalUsers = 600,
-                LockedUsers = 2,
+                TotalUsers = totoalCount.TotalNumberUsers,
+                LockedUsers = totoalCount.TotlaLockedOut,
                 PasswordResetUsers = 3,
-                EmailUnconfirmedUsers = 10,
-                RoleCounts = new List<RoleCountModel>() 
-                { 
-                    new RoleCountModel() 
-                    { 
-                        RoleId = "1",
-                        Name = "Administrator", 
-                        Count = 3 
-                    },
-                    new RoleCountModel()
-                    {
-                        RoleId = "2",
-                        Name = "Super User",
-                        Count = 10
-                    },
-                    new RoleCountModel()
-                    {
-                        RoleId = "2",
-                        Name = "Data Clerk",
-                        Count = 500
-                    },
-                }
+                EmailUnconfirmedUsers = totoalCount.TotalEmailNotConfirm,
+                RoleCounts = roles,
+                //{ 
+                //    new RoleCountModel() 
+                //    { 
+                //        RoleId = "1",
+                //        Name = "Administrator", 
+                //        Count = 3 
+                //    },
+                //    new RoleCountModel()
+                //    {
+                //        RoleId = "2",
+                //        Name = "Super User",
+                //        Count = 10
+                //    },
+                //    new RoleCountModel()
+                //    {
+                //        RoleId = "2",
+                //        Name = "Data Clerk",
+                //        Count = 500
+                //    },
+                //}
             };
 
             return View(vm);

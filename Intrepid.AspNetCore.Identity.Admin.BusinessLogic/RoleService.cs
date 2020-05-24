@@ -2,6 +2,7 @@
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,29 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         }
 
 
+        public async Task<ResultDTO<List<IdentityRoleDTO>>> AllRoleInfo()
+        {
 
+            var result = new ResultDTO<List<IdentityRoleDTO>>();
+            var aggregateCount = await (from role in this.Context.Roles
+                                 let cCount =
+                                 (
+                                    from c in Context.UserRoles
+                                    where role.Id == c.RoleId
+                                    select c
+                                 ).Count()
+                                 select new IdentityRoleDTO()
+                                 {
+                                     Id = role.Id,
+                                     Name = role.Name,
+                                     NormalizedName = role.NormalizedName,
+                                     ConcurrencyStamp = role.ConcurrencyStamp,
+                                     UserCount = cCount
+                                 }).ToListAsync();
+            result.IsSuccess = true;
+            result.ReturnObject = aggregateCount;
+            return result;
+        }
         public async Task<ResultDTO<IdentityRoleDTO>> CreateUpdateRole(IdentityRoleDTO role)
         {
             var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };

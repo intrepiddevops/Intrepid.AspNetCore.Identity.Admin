@@ -75,6 +75,25 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return await query.ProjectTo<IdentityUserDTO>(this.Mapper.ConfigurationProvider).ToListAsync();
         }
 
+        public async Task<IdentityUserMetaData> UsersMetaData()
+        {
+            var query = Manager.Users.AsQueryable();
+            var currentDateTime = DateTime.UtcNow;
+            var countQuery = Manager.Users.AsQueryable().Select(e => new {
+                Locked = (e.LockoutEnabled && e.LockoutEnd.HasValue && e.LockoutEnd.Value > currentDateTime) ? 1 : 0,
+                EmailNotConfired = (e.EmailConfirmed ? 0 : 1)
+
+            }).GroupBy(e=>1)
+            .Select(g => new {
+                Count=g.Count(),
+                LockedCount=g.Sum(e=>e.Locked),
+                EmailNotConfiredCount=g.Sum(e=>e.EmailNotConfired)
+            });
+            var user=await this.Manager.FindByNameAsync("user@intrepiddevops.com");
+            var result = await countQuery.FirstOrDefaultAsync();
+            return new IdentityUserMetaData { TotalNumberUsers=result.Count, TotalEmailNotConfirm = result.LockedCount, TotlaLockedOut = result.LockedCount};
+        }
+
 
         public async Task<ResultDTO<IdentityUserDTO>> CreateUser(IdentityUserDTO userDto, string password)
         {

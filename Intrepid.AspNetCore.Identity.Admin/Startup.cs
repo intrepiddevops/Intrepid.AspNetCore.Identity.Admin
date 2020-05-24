@@ -19,6 +19,11 @@ using Intrepid.AspNetCore.Identity.Admin.Common.Settings;
 using Intrepid.AspNetCore.Identity.Admin.Configuration;
 using Newtonsoft.Json;
 using System.IO;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers;
+using AutoMapper;
+using Intrepid.AspNetCore.Identity.Admin.Configurations.Mapper;
+using System.Reflection;
 
 namespace Intrepid.AspNetCore.Identity.Admin
 {
@@ -47,6 +52,12 @@ namespace Intrepid.AspNetCore.Identity.Admin
             services.AddRazorPages()
                 .AddRazorRuntimeCompilation();
             this.RegisterPolicy(services);
+            var assemlbies = new List<Assembly>();
+            assemlbies.Add(typeof(IdentityUserProfile).Assembly);
+            assemlbies.Add(typeof(IdentityRoleDTOProfile).Assembly);
+            services.AddAutoMapper(assemlbies);
+            services.AddScoped<RoleService>();
+            services.AddScoped<IdentityService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

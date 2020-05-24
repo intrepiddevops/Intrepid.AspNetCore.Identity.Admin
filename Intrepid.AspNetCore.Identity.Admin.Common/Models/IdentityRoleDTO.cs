@@ -13,5 +13,6 @@ namespace Intrepid.AspNetCore.Identity.Admin.Common.Models
         public string NormalizedName { get; set; }
         public string ClaimType { get; set; }
         public string ClaimValue { get; set; }
+        public int UserCount { get; set; }
     }
 }
