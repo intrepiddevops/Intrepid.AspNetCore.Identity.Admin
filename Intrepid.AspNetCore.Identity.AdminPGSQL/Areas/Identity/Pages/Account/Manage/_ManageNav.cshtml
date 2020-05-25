@@ -1,4 +1,5 @@
-﻿@inject SignInManager<IdentityUser> SignInManager
+﻿@using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
+@inject SignInManager<ApplicationIdentityUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Intrepid.AspNetCore.Identity.Admin.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Intrepid.AspNetCore.Identity.Admin
+namespace Intrepid.AspNetCore.Identity.AdminPGSql
 {
     public class Program
     {
@@ -15,8 +16,8 @@ namespace Intrepid.AspNetCore.Identity.Admin
         {
             var host = CreateHostBuilder(args).Build();
 
-            await Configuration.Configuration.EnsureSeedData(host);
-
+            await Configuration.EnsureSeedData(host);
+                
 
             host.Run();
         }

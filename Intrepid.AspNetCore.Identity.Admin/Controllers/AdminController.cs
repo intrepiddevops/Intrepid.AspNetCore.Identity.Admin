@@ -40,7 +40,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
             {
                 TotalUsers = totoalCount.TotalNumberUsers,
                 LockedUsers = totoalCount.TotlaLockedOut,
-                PasswordResetUsers = 3,
+                PhoneNumberConfirmUsers = totoalCount.PhoneNumberConfirmed,
                 EmailUnconfirmedUsers = totoalCount.TotalEmailNotConfirm,
                 RoleCounts = roles,
                 //{ 

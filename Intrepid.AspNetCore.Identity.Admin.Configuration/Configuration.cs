@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,9 +20,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configuration
             {
                 using (var scope = serviceScope.ServiceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
+                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationIdentityRole>>();
                     var identityConfiguration = scope.ServiceProvider.GetRequiredService<IdentityDataConfiguration>();
 
                     await EnsureSeedIdentityData(identityConfiguration, roleManager, userManager);
@@ -28,7 +30,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configuration
                 }
             }
         }
-        private static async Task EnsureSeedIdentityData(IdentityDataConfiguration model, RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager)
+        private static async Task EnsureSeedIdentityData(IdentityDataConfiguration model, RoleManager<ApplicationIdentityRole> roleManager, UserManager<ApplicationIdentityUser> userManager)
         {
             if (!await roleManager.Roles.AnyAsync())
             {
@@ -38,7 +40,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configuration
                 {
                     if (!await roleManager.RoleExistsAsync(r.Name))
                     {
-                        var role = new IdentityRole
+                        var role = new ApplicationIdentityRole
                         {
                             Name = r.Name
                         };
@@ -61,7 +63,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configuration
                 // adding users from seed
                 foreach (var user in model.Users)
                 {
-                    var identityUser = new IdentityUser
+                    var identityUser = new ApplicationIdentityUser
                     {
                         UserName = user.UserName,
                         Email = user.Email,

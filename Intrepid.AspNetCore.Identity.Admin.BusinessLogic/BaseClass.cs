@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,10 +13,10 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
     public abstract class BaseClass
     {
         
-        public IdentityDbContext Context { get; }
+        public ApplicationDbContext Context { get; }
         public IMapper Mapper { get; }
         public ILogger Logger { get; }
-        public BaseClass(IdentityDbContext context, IMapper mapper, ILogger logger)
+        public BaseClass(ApplicationDbContext context, IMapper mapper, ILogger logger)
         {
             Context = context;
             Mapper = mapper;

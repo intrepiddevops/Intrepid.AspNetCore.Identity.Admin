@@ -12,7 +12,7 @@
       "Email": "user@intrepiddevops.com",
       "Password": "Welcome!23",
       "Claims": [],
-      "Roles": []
+      "Roles": [ ]
     }
   ],
   "Roles": [

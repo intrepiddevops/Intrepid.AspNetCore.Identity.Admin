@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +17,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 {
     public class RoleService : BaseClass
     {
-        public RoleManager<IdentityRole> Role { get; }
-        public RoleService(RoleManager<IdentityRole> role, IdentityDbContext dbContext, IMapper mapper, ILogger<RoleService> logger) : base(dbContext, mapper, logger)
+        public RoleManager<ApplicationIdentityRole> Role { get; }
+        public RoleService(RoleManager<ApplicationIdentityRole> role, ApplicationDbContext dbContext, IMapper mapper, ILogger<RoleService> logger) : base(dbContext, mapper, logger)
         {
             this.Role = role;
         }
@@ -48,7 +50,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         public async Task<ResultDTO<IdentityRoleDTO>> CreateUpdateRole(IdentityRoleDTO role)
         {
             var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };
-            var identityRole = this.Mapper.Map<IdentityRole>(role);
+            var identityRole = this.Mapper.Map<ApplicationIdentityRole>(role);
             try
             {
                 var findRole = await this.Role.FindByIdAsync(role.Id);

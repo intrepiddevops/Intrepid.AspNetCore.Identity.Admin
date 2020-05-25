@@ -14,7 +14,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Models
 
         public int TotalUsers { get; set; }
         public int LockedUsers { get; set; }
-        public int PasswordResetUsers { get; set; }
+        public int PhoneNumberConfirmUsers { get; set; }
         public int EmailUnconfirmedUsers { get; set; }
         public List<RoleCountModel> RoleCounts { get; set; }
         

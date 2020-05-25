@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.Common\Intrepid.AspNetCore.Identity.Admin.Common.csproj" />
+    <ProjectReference Include="..\Intrepid.AspNetCore.Identity.Admin.EntityFramework\Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.csproj" />
   </ItemGroup>
 
 </Project>

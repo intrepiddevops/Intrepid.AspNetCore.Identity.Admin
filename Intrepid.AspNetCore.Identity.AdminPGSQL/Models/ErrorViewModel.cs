@@ -1,6 +1,6 @@
 using System;
 
-namespace Intrepid.AspNetCore.Identity.Admin.Models
+namespace Intrepid.AspNetCore.Identity.AdminPGSql.Models
 {
     public class ErrorViewModel
     {

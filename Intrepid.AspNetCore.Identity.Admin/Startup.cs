@@ -24,6 +24,8 @@ using Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers;
 using AutoMapper;
 using Intrepid.AspNetCore.Identity.Admin.Configurations.Mapper;
 using System.Reflection;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 
 namespace Intrepid.AspNetCore.Identity.Admin
 {
@@ -40,10 +42,10 @@ namespace Intrepid.AspNetCore.Identity.Admin
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.RegisterSqlServerDbContexts<IdentityDbContext>(Configuration.GetConnectionString("DefaultConnection"));
+            services.RegisterSqlServerDbContexts<ApplicationDbContext>(Configuration.GetConnectionString("DefaultConnection"));
 
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<IdentityDbContext>();
+            services.AddDefaultIdentity<ApplicationIdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddRoles<ApplicationIdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
             //before continue ensure data is seeded
             //testing
             var  identityConfig = JsonConvert.DeserializeObject<IdentityDataConfiguration>(File.ReadAllText($@"{Environment.CurrentDirectory}\data\IdentityConfiguration.json"));

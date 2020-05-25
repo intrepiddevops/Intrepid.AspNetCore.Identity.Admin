@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Intrepid.AspNetCore.Identity.Admin.Models
+namespace Intrepid.AspNetCore.Identity.AdminPGSql.Models
 {
     public class DashboardViewModel
     {
@@ -14,7 +14,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Models
 
         public int TotalUsers { get; set; }
         public int LockedUsers { get; set; }
-        public int PasswordResetUsers { get; set; }
+        public int PhoneNumberConfirmUsers { get; set; }
         public int EmailUnconfirmedUsers { get; set; }
         public List<RoleCountModel> RoleCounts { get; set; }
         

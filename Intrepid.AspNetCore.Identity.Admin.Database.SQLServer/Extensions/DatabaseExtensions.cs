@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Database.SQLServer.Extensions
         /// <param name="errorLoggingConnectionString"></param>
         /// <param name="auditLoggingConnectionString"></param>
         public static void RegisterSqlServerDbContexts<TIdentityDbContext>(this IServiceCollection services, string identityConnectionString)
-             where TIdentityDbContext : IdentityDbContext
+             where TIdentityDbContext : ApplicationDbContext
 
         {
             var migrationsAssembly = typeof(DatabaseExtensions).GetTypeInfo().Assembly.GetName().Name;

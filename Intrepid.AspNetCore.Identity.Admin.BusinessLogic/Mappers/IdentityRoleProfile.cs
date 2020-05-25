@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers
     {
         public IdentityRoleProfile()
         {
-            CreateMap<IdentityRole, IdentityRoleDTO>().ForMember(x => x.UserCount, opts => opts.Ignore()).ReverseMap();
+            CreateMap<ApplicationIdentityRole, IdentityRoleDTO>().ForMember(x => x.UserCount, opts => opts.Ignore()).ReverseMap();
         }
     }
 }

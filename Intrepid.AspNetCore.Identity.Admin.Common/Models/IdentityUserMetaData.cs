@@ -6,6 +6,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Common.Models
 {
     public class IdentityUserMetaData
     {
+        public int PhoneNumberConfirmed { get; set; }
         public int TotalNumberUsers { get; set; }
         public int TotlaLockedOut { get; set; }
         public int TotalEmailNotConfirm { get; set; }

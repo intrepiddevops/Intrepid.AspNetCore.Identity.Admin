@@ -2,6 +2,8 @@
 using AutoMapper.QueryableExtensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Extensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +21,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 {
     public class IdentityService: BaseClass
     {
-        public UserManager<IdentityUser> Manager { get; private set; }
-        public IdentityService(UserManager<IdentityUser> manager, IdentityDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(dbContext, mapper, logger)
+        public UserManager<ApplicationIdentityUser> Manager { get; private set; }
+        public IdentityService(UserManager<ApplicationIdentityUser> manager, ApplicationDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(dbContext, mapper, logger)
         {
             Manager = manager;
         }
@@ -79,19 +81,27 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         {
             var query = Manager.Users.AsQueryable();
             var currentDateTime = DateTime.UtcNow;
-            var countQuery = Manager.Users.AsQueryable().Select(e => new {
+            var countQuery = Manager.Users.AsQueryable().Select(e => new
+            {
+                PhoneNumberConfirmed = (e.PhoneNumberConfirmed ? 1 : 0),
                 Locked = (e.LockoutEnabled && e.LockoutEnd.HasValue && e.LockoutEnd.Value > currentDateTime) ? 1 : 0,
                 EmailNotConfired = (e.EmailConfirmed ? 0 : 1)
-
             }).GroupBy(e=>1)
             .Select(g => new {
                 Count=g.Count(),
                 LockedCount=g.Sum(e=>e.Locked),
-                EmailNotConfiredCount=g.Sum(e=>e.EmailNotConfired)
+                PhoneNumberConfirmed=g.Sum(e=>e.PhoneNumberConfirmed),
+                EmailNotConfiredCount =g.Sum(e=>e.EmailNotConfired)
             });
-            var user=await this.Manager.FindByNameAsync("user@intrepiddevops.com");
+            
             var result = await countQuery.FirstOrDefaultAsync();
-            return new IdentityUserMetaData { TotalNumberUsers=result.Count, TotalEmailNotConfirm = result.LockedCount, TotlaLockedOut = result.LockedCount};
+            return new IdentityUserMetaData
+            {
+                TotalNumberUsers = result.Count,
+                TotalEmailNotConfirm = result.LockedCount,
+                PhoneNumberConfirmed = result.PhoneNumberConfirmed,
+                TotlaLockedOut = result.LockedCount
+            };
         }
 
 
@@ -104,7 +114,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                 try
                 {
 
-                    var user = this.Mapper.Map<IdentityUser>(userDto);
+                    var user = this.Mapper.Map<ApplicationIdentityUser>(userDto);
                     if (!Manager.SupportsQueryableUsers)
                         throw new Exception("Does not support Queryable Users");
                     var result = await Manager.CreateAsync(user, password);
