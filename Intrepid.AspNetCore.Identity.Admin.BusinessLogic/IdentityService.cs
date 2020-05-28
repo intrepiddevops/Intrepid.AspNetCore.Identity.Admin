@@ -67,6 +67,15 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return result;      
         }
 
+        public async Task<(int count, List<IdentityUserDTO>)> AllUsers(int pageSize, int pageNum=0)
+        {
+            var query = Manager.Users.AsQueryable();
+            query=query.Skip(pageSize * pageNum).Take(pageSize+1);
+
+            var count = await Manager.Users.CountAsync();
+            var users= await query.ProjectTo<IdentityUserDTO>(this.Mapper.ConfigurationProvider).ToListAsync();
+            return (count, users);
+        }
         public async Task<List<IdentityUserDTO>> SearchUser(string email, string name)
         {
             var query = Manager.Users.AsQueryable();

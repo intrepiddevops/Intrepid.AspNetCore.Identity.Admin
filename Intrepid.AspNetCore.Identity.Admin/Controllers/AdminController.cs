@@ -43,62 +43,24 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
                 PhoneNumberConfirmUsers = totoalCount.PhoneNumberConfirmed,
                 EmailUnconfirmedUsers = totoalCount.TotalEmailNotConfirm,
                 RoleCounts = roles,
-                //{ 
-                //    new RoleCountModel() 
-                //    { 
-                //        RoleId = "1",
-                //        Name = "Administrator", 
-                //        Count = 3 
-                //    },
-                //    new RoleCountModel()
-                //    {
-                //        RoleId = "2",
-                //        Name = "Super User",
-                //        Count = 10
-                //    },
-                //    new RoleCountModel()
-                //    {
-                //        RoleId = "2",
-                //        Name = "Data Clerk",
-                //        Count = 500
-                //    },
-                //}
             };
 
             return View(vm);
         }
 
-        public IActionResult Users()
+        public async Task<IActionResult> Users()
         {
+            var results = await IdentityService.AllUsers(1000, 0);
+            var users = results.Item2.Select(x => Mapper.Map<UserGridRowModel>(x)).ToList();
             UsersViewModel vm = new UsersViewModel()
             {
                 GridControl = new GridControlModel()
                 {
                     PageSize = 10,
                     CurrentPage = 1,
-                    TotalRecords = 2
+                    TotalRecords = results.count
                 },
-                GridData = new List<UserGridRowModel>()
-                {                    
-                    new UserGridRowModel()
-                    {
-                        UserId = "1",
-                        Email = "steve@intrepiddevops.com",
-                        IsLocked = false,
-                        IsTwoFactorEnabled = false,
-                        Phone = "4165551234",
-                        Username = "steve@intrepiddevops.com"
-                    },
-                    new UserGridRowModel()
-                    {
-                        UserId = "2",
-                        Email = "john@intrepiddevops.com",
-                        IsLocked = false,
-                        IsTwoFactorEnabled = false,
-                        Phone = "4165551234",
-                        Username = "john@intrepiddevops.com"
-                    }
-                }
+                GridData = users
             };
 
             return View(vm);
