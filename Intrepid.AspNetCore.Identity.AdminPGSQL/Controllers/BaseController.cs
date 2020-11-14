@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Intrepid.AspNetCore.Identity.Admin.Controllers
+namespace Intrepid.AspNetCore.Identity.AdminPGSql.Controllers
 {
     [Authorize]
     public abstract class BaseController:Controller

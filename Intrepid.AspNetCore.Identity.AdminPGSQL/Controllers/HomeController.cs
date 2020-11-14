@@ -5,21 +5,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Intrepid.AspNetCore.Identity.Admin.Models;
+using Intrepid.AspNetCore.Identity.AdminPGSql.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 
-namespace Intrepid.AspNetCore.Identity.Admin.Controllers
+namespace Intrepid.AspNetCore.Identity.AdminPGSql.Controllers
 {
     
     public class HomeController : BaseController
     {
-        public UserManager<IdentityUser> Manager { get; }
+        public UserManager<ApplicationIdentityUser> Manager { get; }
 
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> manager)
+        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationIdentityUser> manager)
         {
             this.Manager = manager;
             _logger = logger;
@@ -39,7 +40,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
         public async Task<IActionResult> CreateDummyUser()
         {
             
-            var user = new IdentityUser();
+            var user = new ApplicationIdentityUser();
             user.Email = "schang2@softtect.net";
             user.EmailConfirmed = true;
             

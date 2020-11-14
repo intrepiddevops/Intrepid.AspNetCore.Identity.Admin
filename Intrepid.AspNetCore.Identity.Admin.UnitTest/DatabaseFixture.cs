@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers;
 using Intrepid.AspNetCore.Identity.Admin.Database.SQLServer.Extensions;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using MartinCostello.SqlLocalDb;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -45,7 +47,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest
             AddServiceCollection(config);
             Provider = this.ServiceCollection.BuildServiceProvider();
             //update the provider migration
-            var dbcontext = Provider.GetService<IdentityDbContext>();
+            var dbcontext = Provider.GetService<ApplicationDbContext>();
             dbcontext.Database.Migrate();
         }
 
@@ -61,12 +63,12 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest
             });
             //add the mapper
             ServiceCollection.AddAutoMapper(typeof(IdentityUserProfile).Assembly);
-            ServiceCollection.RegisterSqlServerDbContexts<IdentityDbContext>(config.GetConnectionString("DefaultConnection"));
-            ServiceCollection.AddIdentity<IdentityUser, IdentityRole>(option => {
+            ServiceCollection.RegisterSqlServerDbContexts<ApplicationDbContext>(config.GetConnectionString("DefaultConnection"));
+            ServiceCollection.AddIdentity<ApplicationIdentityUser, ApplicationIdentityRole>(option => {
                 option.Password.RequireUppercase = true;
                 option.Password.RequireNonAlphanumeric = false;
             })
-            .AddEntityFrameworkStores<IdentityDbContext>();
+            .AddEntityFrameworkStores<ApplicationDbContext>();
             //ServiceCollection.AddScoped<UserManager<IdentityUser>>();
         }
 

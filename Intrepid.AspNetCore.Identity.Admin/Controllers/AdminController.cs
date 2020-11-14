@@ -9,93 +9,142 @@ using Intrepid.AspNetCore.Identity.Admin.Models;
 using System.Security.Claims;
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
+using AutoMapper;
+using Intrepid.AspNetCore.Identity.Admin.Common.Models;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
+    [Route("admin")]
     [Authorize(Policy = "AdminManagerRole")]
     public class AdminController : BaseController
     {
+        public RoleService RoleService { get; }
+        public IMapper Mapper { get; }
+        public IdentityService IdentityService { get; }
+
+        public AdminController(RoleService roleService, IMapper mapepr, IdentityService identityService)
+        {
+            this.RoleService = roleService;
+            this.Mapper = mapepr;
+            this.IdentityService = identityService;
+        }
         /// <summary>
         /// Dashboard
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index()
+        [HttpGet]
+        public async Task< IActionResult> Index()
         {
+            var rolesOriginal = await RoleService.AllRoleInfo();
+            var roles = rolesOriginal.ReturnObject.Select(x => Mapper.Map<RoleCountModel>(x)).ToList();
+            var totoalCount = await this.IdentityService.UsersMetaData();
             DashboardViewModel vm = new DashboardViewModel()
             {
-                TotalUsers = 600,
-                LockedUsers = 2,
-                PasswordResetUsers = 3,
-                EmailUnconfirmedUsers = 10,
-                RoleCounts = new List<RoleCountModel>() 
-                { 
-                    new RoleCountModel() 
-                    { 
-                        RoleId = "1",
-                        Name = "Administrator", 
-                        Count = 3 
-                    },
-                    new RoleCountModel()
-                    {
-                        RoleId = "2",
-                        Name = "Super User",
-                        Count = 10
-                    },
-                    new RoleCountModel()
-                    {
-                        RoleId = "2",
-                        Name = "Data Clerk",
-                        Count = 500
-                    },
-                }
+                TotalUsers = totoalCount.TotalNumberUsers,
+                LockedUsers = totoalCount.TotlaLockedOut,
+                PhoneNumberConfirmUsers = totoalCount.PhoneNumberConfirmed,
+                EmailUnconfirmedUsers = totoalCount.TotalEmailNotConfirm,
+                RoleCounts = roles,
             };
 
             return View(vm);
         }
-
-        public IActionResult Users()
+        [HttpGet("users")]
+        public async Task<IActionResult> Users()
         {
+            var results = await IdentityService.AllUsers(1000, 0);
+            var users = results.Item2.Select(x => Mapper.Map<UserGridRowModel>(x)).ToList();
             UsersViewModel vm = new UsersViewModel()
             {
                 GridControl = new GridControlModel()
                 {
                     PageSize = 10,
                     CurrentPage = 1,
-                    TotalRecords = 2
+                    TotalRecords = results.count
                 },
-                GridData = new List<UserGridRowModel>()
-                {                    
-                    new UserGridRowModel()
-                    {
-                        UserId = "1",
-                        Email = "steve@intrepiddevops.com",
-                        IsLocked = false,
-                        IsTwoFactorEnabled = false,
-                        Phone = "4165551234",
-                        Username = "steve@intrepiddevops.com"
-                    },
-                    new UserGridRowModel()
-                    {
-                        UserId = "2",
-                        Email = "john@intrepiddevops.com",
-                        IsLocked = false,
-                        IsTwoFactorEnabled = false,
-                        Phone = "4165551234",
-                        Username = "john@intrepiddevops.com"
-                    }
-                }
+                GridData = users
             };
 
             return View(vm);
         }
-
-        public IActionResult AddUser(UserForCreationModel model)
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> UserDetail(string id)
         {
+            var user=await this.IdentityService.SearchUserByIdAsync(id);
+            
+            if (user == default)
+                return RedirectToAction("users");
+            var model = this.Mapper.Map<UserForCreationModel>(user);
+            model.AvailableRoles= (await this.RoleService.AllRoleInfo()).ReturnObject.ToDictionary(x => x.Id, x => x.Name);
+            return View("UserDetail", model);
+            
+            
+        }
+        [HttpGet("adduser")]
+        public async Task<IActionResult> AddUser()
+        {
+            var model = new UserForCreationModel();
+            var roles = await this.RoleService.AllRoleInfo();
+            model.AvailableRoles = roles.ReturnObject.ToDictionary(x => x.Id, x => x.Name);
             ModelState.Clear();
 
-            return View();
+            return View("userdetail", model);
+        }
+        [HttpPost("addorupdate")]
+        public async Task<IActionResult> AddOrUpdate(UserForCreationModel vm)
+        {
+            var roles = await this.RoleService.AllRoleInfo();
+            vm.AvailableRoles = roles.ReturnObject.ToDictionary(x => x.Id, x => x.Name);
+            if (!ModelState.IsValid)
+                return View("UserDetail", vm);
+            vm.Username = vm.Email;
+            
+            var identityUser = this.Mapper.Map<IdentityUserDTO>(vm);
+            if (string.IsNullOrEmpty(identityUser.Id))
+            {
+                identityUser.Id = Guid.NewGuid().ToString();
+                var identityUserCreateResule = await this.IdentityService.CreateUser(identityUser, vm.Password);
+                if (!identityUserCreateResule.IsSuccess)
+                {
+                    this.ModelState.AddModelError(nameof(vm.Username), string.Join(", ", identityUserCreateResule.IdentityError.Select(x => x.Description)));
+                    return View("UserDetail", vm);
+                }
+            }
+            else
+            {
+                identityUser.PasswordHash = string.Empty;
+                var updateUserCreateResule = await this.IdentityService.UpdateUser(identityUser, vm.Password);
+                if (!updateUserCreateResule.IsSuccess)
+                {
+                    this.ModelState.AddModelError(nameof(vm.Username), string.Join(", ", updateUserCreateResule.IdentityError.Select(x => x.Description)));
+                    return View("UserDetail", vm);
+                }
+            }
+            return RedirectToAction("Users");
         }
 
+        [HttpPost("deleteuser")]
+        public async Task<IActionResult> DeleteUser(UserForCreationModel vm)
+        {
+            var roles = await this.RoleService.AllRoleInfo();
+            vm.AvailableRoles = roles.ReturnObject.ToDictionary(x => x.Id, x => x.Name);
+            
+            //cannot delete ur self
+            if (vm.UserId.ToLower() == User.FindFirstValue(ClaimTypes.NameIdentifier).ToLower())
+            {
+                this.ModelState.AddModelError(nameof(vm.Email), "cannot delete the current logged in user");
+                return View("UserDetail", vm);
+            }
+            var result = await this.IdentityService.DeleteUserAsync(vm.UserId);
+            if (!result.IsSuccess)
+            {
+                this.ModelState.AddModelError(nameof(vm.Email), string.Join(", ", result.ErrorMsg));
+                return View("UserDetail", vm);
+            }
+            return RedirectToAction("users");
+        }
+        [HttpGet("getuser")]
         public IActionResult GetUser()
         {
             UserViewModel vm = new UserViewModel()
@@ -138,35 +187,89 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 
             return View(vm);
         }
-
-        public IActionResult Roles()
+        [HttpGet("Roles")]
+        public async Task<IActionResult> Roles()
         {
+            var roles = await this.RoleService.AllRoleInfo();
+            //project the roles
+            var rolesModel = roles.ReturnObject.Select(x => this.Mapper.Map<RoleCountModel>(x)).ToList();
+
             RolesViewModel vm = new RolesViewModel()
             {
                 GridControl = new GridControlModel()
                 {
                     PageSize = 10,
                     CurrentPage = 1,
-                    TotalRecords = 2
+                    TotalRecords = rolesModel.Count,
                 },
                 GridData = new List<RoleGridRowModel>()
-                {
-                    new RoleGridRowModel()
-                    {
-                        RoleId = "1",
-                        Name = "Administrator"
-                    },
-                    new RoleGridRowModel()
-                    {
-                        RoleId = "2",
-                        Name = "Super User"
-                    }
-                }
             };
+            foreach(var role in rolesModel)
+            {
+                vm.GridData.Add(new RoleGridRowModel()
+                {
+                    RoleId = role.RoleId,
+                    Name = role.Name,
+                    Count = role.Count
+                });
+            }
 
             return View(vm);
         }
-        
+
+        [HttpGet("newrole")]
+        public IActionResult AddRoleForm(RoleCountModel newRole)
+        {
+            var vm = new RoleCountModel();
+            return View("RoleDetail", vm);
+        }
+        [HttpGet("role/{id}")]
+        public async  Task<IActionResult> AddRoleForm(string id)
+        {
+            var role = (await this.RoleService.AllRoleInfo()).ReturnObject.Where(x => x.Id == id).FirstOrDefault();
+            if (role == default)
+                return RedirectToAction("Roles");
+            var vm = new RoleCountModel()
+            {
+                RoleId = role.Id,
+                Name = role.Name,
+                Count = role.UserCount,
+                ConcurrencyStamp=role.ConcurrencyStamp
+            };
+            return View("RoleDetail", vm);
+        }
+        [HttpPost("addupdaterole")]
+        public async Task<IActionResult> AddUpdateRole(RoleCountModel newRole)
+        {
+            if (string.IsNullOrEmpty(newRole.Name))
+                return RedirectToAction("Roles");
+            //check if the role existed already
+            
+            var result=await this.RoleService.CreateUpdateRole(this.Mapper.Map< IdentityRoleDTO>(newRole));
+            if (result.IsSuccess)
+                return RedirectToAction("Roles");
+            //ok it failed
+            //ok it has failed// publish to the model state
+            this.ModelState.AddModelError(nameof(newRole.Name), string.Join(", ", result.ErrorMsg));
+            this.ModelState.AddModelError(nameof(newRole.Name), string.Join(", ", result.IdentityError.Select(x=>x.Description)));
+            return View("RoleDetail");
+        }
+        [HttpPost("deleterole")]
+        public async Task<IActionResult> Delete(RoleCountModel vm)
+        {
+            if (string.IsNullOrEmpty(vm.RoleId))
+                return RedirectToAction("Roles");
+            //check if the role existed already
+
+            var result = await this.RoleService.DeleteRole(vm.RoleId);
+            if (result.IsSuccess)
+                return RedirectToAction("Roles");
+            //ok it failed
+            //ok it has failed// publish to the model state
+            this.ModelState.AddModelError(nameof(vm.Name), string.Join(", ", result.ErrorMsg));
+            this.ModelState.AddModelError(nameof(vm.Name), string.Join(", ", result.IdentityError.Select(x => x.Description)));
+            return View("RoleDetail");
+        }
         public IActionResult Claims()
         {
             ClaimsViewModel vm = new ClaimsViewModel();

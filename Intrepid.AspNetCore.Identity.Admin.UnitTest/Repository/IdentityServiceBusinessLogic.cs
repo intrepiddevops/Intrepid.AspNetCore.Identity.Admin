@@ -2,6 +2,8 @@
 using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
 using Intrepid.AspNetCore.Identity.Admin.Common.Extensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,16 +24,16 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
         [Fact]
         public async Task InsertIdentityUserWithRolesTest()
         {
-            var manager = this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>();
-            var dbContext = this.Fixture.Provider.GetRequiredService<IdentityDbContext>();
-            dbContext.Roles.Add(new IdentityRole { 
+            var manager = this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
+            var dbContext = this.Fixture.Provider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Roles.Add(new ApplicationIdentityRole { 
                 Id=Guid.NewGuid().ToString(),
                 Name= "InsertIdentityUserWithRolesTest",
                 NormalizedName= "InsertIdentityUserWithRolesTest".ToUpper()
             });
             await dbContext.SaveChangesAsync();
-            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>(),
-                this.Fixture.Provider.GetRequiredService<IdentityDbContext>(),
+            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>(),
+                this.Fixture.Provider.GetRequiredService<ApplicationDbContext>(),
                 this.Fixture.Provider.GetRequiredService<IMapper>(), this.Fixture.Provider.GetRequiredService<ILogger<IdentityService>>());
             var emailGenerated = Guid.NewGuid() + "@hotmail.com";
             var password = "Password123";
@@ -54,9 +56,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
         [Fact]
         public async Task<bool> InsertIdentityUserTest()
         {
-            var manager = this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>();
-            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>(),
-                this.Fixture.Provider.GetRequiredService<IdentityDbContext>(),
+            var manager = this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
+            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>(),
+                this.Fixture.Provider.GetRequiredService<ApplicationDbContext>(),
                 this.Fixture.Provider.GetRequiredService<IMapper>(), this.Fixture.Provider.GetRequiredService<ILogger<IdentityService>>());
             var emailGenerated = Guid.NewGuid() + "@hotmail.com";
             var password = "password123";
@@ -92,9 +94,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
         [Fact]
         public async Task<bool> VerifyUserPassword()
         {
-            var manager = this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>();
-            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>(),
-                this.Fixture.Provider.GetRequiredService<IdentityDbContext>(),
+            var manager = this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
+            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>(),
+                this.Fixture.Provider.GetRequiredService<ApplicationDbContext>(),
                 this.Fixture.Provider.GetRequiredService<IMapper>(), this.Fixture.Provider.GetRequiredService<ILogger<IdentityService>>());
             var emailGenerated = Guid.NewGuid() + "@hotmail.com";
             var password = "Password123";
@@ -124,9 +126,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
         [Fact]
         public async Task<bool> ChangeUserPassword()
         {
-            var manager = this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>();
-            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>(),
-                this.Fixture.Provider.GetRequiredService<IdentityDbContext>(),
+            var manager = this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
+            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>(),
+                this.Fixture.Provider.GetRequiredService<ApplicationDbContext>(),
                 this.Fixture.Provider.GetRequiredService<IMapper>(), this.Fixture.Provider.GetRequiredService<ILogger<IdentityService>>());
             var emailGenerated = Guid.NewGuid() + "@hotmail.com";
             var password = "Password123";
@@ -155,24 +157,24 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
         [Fact]
         public async Task UpdateIdentityUser()
         {
-            var manager = this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>();
+            var manager = this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>();
             var mapper = this.Fixture.Provider.GetRequiredService<IMapper>();
-            var dbContext = this.Fixture.Provider.GetRequiredService<IdentityDbContext>();
-            dbContext.Roles.Add(new IdentityRole
+            var dbContext = this.Fixture.Provider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Roles.Add(new ApplicationIdentityRole
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = "UpdateIdentityUser1",
                 NormalizedName = "UpdateIdentityUser1".ToUpper()
             });
-            dbContext.Roles.Add(new IdentityRole
+            dbContext.Roles.Add(new ApplicationIdentityRole
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = "UpdateIdentityUser2",
                 NormalizedName = "UpdateIdentityUser2".ToUpper()
             });
             await dbContext.SaveChangesAsync();
-            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<IdentityUser>>(),
-                this.Fixture.Provider.GetRequiredService<IdentityDbContext>(),
+            var identityservice = new IdentityService(this.Fixture.Provider.GetRequiredService<UserManager<ApplicationIdentityUser>>(),
+                this.Fixture.Provider.GetRequiredService<ApplicationDbContext>(),
                 this.Fixture.Provider.GetRequiredService<IMapper>(), this.Fixture.Provider.GetRequiredService<ILogger<IdentityService>>());
             var emailGenerated = Guid.NewGuid() + "@hotmail.com";
             var password = "Password123";
@@ -197,7 +199,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
             updateuserDTO.Roles.Add("UpdateIdentityUser1");
             updateuserDTO.PasswordHash = string.Empty;
             updateuserDTO.PhoneNumber = "12345";
-            result = await identityservice.UpdateUser(updateuserDTO);
+            result = await identityservice.UpdateUser(updateuserDTO, string.Empty);
 
             Assert.True(result.IsSuccess, "update user success failure");
             Assert.True(result.ReturnObject.Roles.First(x => x.Contains("UpdateIdentityUser1")) != null, "Cannot fine role");
@@ -206,7 +208,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
             updateuserDTO.PasswordHash = string.Empty;
             updateuserDTO.Roles.Clear();
             updateuserDTO.Roles.Add(Guid.NewGuid().ToString());
-            result = await identityservice.UpdateUser(updateuserDTO);
+            result = await identityservice.UpdateUser(updateuserDTO, string.Empty);
             Assert.False(result.IsSuccess, "update success expecting failure");
         }
     }

@@ -19,6 +19,13 @@ using Intrepid.AspNetCore.Identity.Admin.Common.Settings;
 using Intrepid.AspNetCore.Identity.Admin.Configuration;
 using Newtonsoft.Json;
 using System.IO;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
+using Intrepid.AspNetCore.Identity.Admin.BusinessLogic.Mappers;
+using AutoMapper;
+using Intrepid.AspNetCore.Identity.Admin.Configurations.Mapper;
+using System.Reflection;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 
 namespace Intrepid.AspNetCore.Identity.Admin
 {
@@ -35,10 +42,10 @@ namespace Intrepid.AspNetCore.Identity.Admin
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.RegisterSqlServerDbContexts<IdentityDbContext>(Configuration.GetConnectionString("DefaultConnection"));
+            services.RegisterSqlServerDbContexts<ApplicationDbContext>(Configuration.GetConnectionString("DefaultConnection"));
 
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<IdentityDbContext>();
+            services.AddDefaultIdentity<ApplicationIdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddRoles<ApplicationIdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
             //before continue ensure data is seeded
             //testing
             var  identityConfig = JsonConvert.DeserializeObject<IdentityDataConfiguration>(File.ReadAllText($@"{Environment.CurrentDirectory}\data\IdentityConfiguration.json"));
@@ -47,6 +54,12 @@ namespace Intrepid.AspNetCore.Identity.Admin
             services.AddRazorPages()
                 .AddRazorRuntimeCompilation();
             this.RegisterPolicy(services);
+            var assemlbies = new List<Assembly>();
+            assemlbies.Add(typeof(IdentityUserProfile).Assembly);
+            assemlbies.Add(typeof(IdentityRoleDTOProfile).Assembly);
+            services.AddAutoMapper(assemlbies);
+            services.AddScoped<RoleService>();
+            services.AddScoped<IdentityService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

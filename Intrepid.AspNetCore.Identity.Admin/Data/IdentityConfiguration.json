@@ -8,12 +8,97 @@
       "Roles": [ "Admin" ]
     },
     {
-      "UserName": "user@intrepiddevops.com",
-      "Email": "user@intrepiddevops.com",
+      "UserName": "user0@intrepiddevops.com",
+      "Email": "user0@intrepiddevops.com",
       "Password": "Welcome!23",
       "Claims": [],
-      "Roles": [ ]
+      "Roles": []
+    },
+    {
+      "UserName": "user1@intrepiddevops.com",
+      "Email": "user1@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user2@intrepiddevops.com",
+      "Email": "user2@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user3@intrepiddevops.com",
+      "Email": "user3@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user4@intrepiddevops.com",
+      "Email": "user4@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user5@intrepiddevops.com",
+      "Email": "user5@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user6@intrepiddevops.com",
+      "Email": "user6@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user7@intrepiddevops.com",
+      "Email": "user7@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user8@intrepiddevops.com",
+      "Email": "user8@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user9@intrepiddevops.com",
+      "Email": "user9@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user10@intrepiddevops.com",
+      "Email": "user10@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user11@intrepiddevops.com",
+      "Email": "user11@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
+    },
+    {
+      "UserName": "user12@intrepiddevops.com",
+      "Email": "user12@intrepiddevops.com",
+      "Password": "Welcome!23",
+      "Claims": [],
+      "Roles": []
     }
+
   ],
   "Roles": [
     {

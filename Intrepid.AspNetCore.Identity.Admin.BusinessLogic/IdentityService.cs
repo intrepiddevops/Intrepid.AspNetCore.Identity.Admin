@@ -2,6 +2,8 @@
 using AutoMapper.QueryableExtensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Extensions;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.DbContexts;
+using Intrepid.AspNetCore.Identity.Admin.EntityFramework.Shared.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +21,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 {
     public class IdentityService: BaseClass
     {
-        public UserManager<IdentityUser> Manager { get; private set; }
-        public IdentityService(UserManager<IdentityUser> manager, IdentityDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(dbContext, mapper, logger)
+        public UserManager<ApplicationIdentityUser> Manager { get; private set; }
+        public IdentityService(UserManager<ApplicationIdentityUser> manager, ApplicationDbContext dbContext, IMapper mapper, ILogger<IdentityService> logger):base(dbContext, mapper, logger)
         {
             Manager = manager;
         }
@@ -65,6 +67,15 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return result;      
         }
 
+        public async Task<(int count, List<IdentityUserDTO>)> AllUsers(int pageSize, int pageNum=0)
+        {
+            var query = Manager.Users.AsQueryable();
+            query=query.Skip(pageSize * pageNum).Take(pageSize+1);
+
+            var count = await Manager.Users.CountAsync();
+            var users= await query.ProjectTo<IdentityUserDTO>(this.Mapper.ConfigurationProvider).ToListAsync();
+            return (count, users);
+        }
         public async Task<List<IdentityUserDTO>> SearchUser(string email, string name)
         {
             var query = Manager.Users.AsQueryable();
@@ -73,6 +84,45 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             if (!string.IsNullOrEmpty(name))
                 query = query.Where(x => EF.Functions.Like(x.NormalizedUserName, name));
             return await query.ProjectTo<IdentityUserDTO>(this.Mapper.ConfigurationProvider).ToListAsync();
+        }
+
+        public async Task<IdentityUserDTO> SearchUserByIdAsync(string id)
+        {
+            var query = Manager.Users.Where(x => x.Id == id);
+            var defaultUser = query.FirstOrDefault();
+            var user = this.Mapper.Map<IdentityUserDTO>(defaultUser);
+            //get the roles
+            var userRoles = await this.Manager.GetRolesAsync(defaultUser);
+
+            user.Roles = (await this.Manager.GetRolesAsync(defaultUser)).ToList();
+            return user;
+        }
+
+        public async Task<IdentityUserMetaData> UsersMetaData()
+        {
+            var query = Manager.Users.AsQueryable();
+            var currentDateTime = DateTime.UtcNow;
+            var countQuery = Manager.Users.AsQueryable().Select(e => new
+            {
+                PhoneNumberConfirmed = (e.PhoneNumberConfirmed ? 1 : 0),
+                Locked = (e.LockoutEnabled && e.LockoutEnd.HasValue && e.LockoutEnd.Value > currentDateTime) ? 1 : 0,
+                EmailNotConfired = (e.EmailConfirmed ? 0 : 1)
+            }).GroupBy(e=>1)
+            .Select(g => new {
+                Count=g.Count(),
+                LockedCount=g.Sum(e=>e.Locked),
+                PhoneNumberConfirmed=g.Sum(e=>e.PhoneNumberConfirmed),
+                EmailNotConfiredCount =g.Sum(e=>e.EmailNotConfired)
+            });
+            
+            var result = await countQuery.FirstOrDefaultAsync();
+            return new IdentityUserMetaData
+            {
+                TotalNumberUsers = result.Count,
+                TotalEmailNotConfirm = result.LockedCount,
+                PhoneNumberConfirmed = result.PhoneNumberConfirmed,
+                TotlaLockedOut = result.LockedCount
+            };
         }
 
 
@@ -85,7 +135,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                 try
                 {
 
-                    var user = this.Mapper.Map<IdentityUser>(userDto);
+                    var user = this.Mapper.Map<ApplicationIdentityUser>(userDto);
                     if (!Manager.SupportsQueryableUsers)
                         throw new Exception("Does not support Queryable Users");
                     var result = await Manager.CreateAsync(user, password);
@@ -103,8 +153,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                             resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
                             throw new Exception("Role creation failed");
                         }
-                        
-
+                        //finally make sure the email is verified
+                        var emailConfirmToken=await this.Manager.GenerateEmailConfirmationTokenAsync(createdUser);
+                        await this.Manager.ConfirmEmailAsync(createdUser, emailConfirmToken);
                         resultDto.IsSuccess = true;
                     }
                     else
@@ -180,7 +231,38 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return resultDto;
         }
 
-        public async Task<ResultDTO<IdentityUserDTO>> UpdateUser(IdentityUserDTO userDto)
+        public async Task<ResultDTO<IdentityUserDTO>> DeleteUserAsync(string userId)
+        {
+            var resultDTO = new ResultDTO<IdentityUserDTO>();
+            //need to check if it is the last user who has admin role
+            var requestUsertodeleted = await this.Manager.FindByIdAsync(userId);
+            if (requestUsertodeleted == default)
+            {
+                resultDTO.IsSuccess = false;
+                resultDTO.IdentityError = new List<IdentityErrorDTO> { 
+                    new IdentityErrorDTO{ Code="000", Description="Cannot find user" }
+                };
+                return resultDTO;
+            }
+            //check if anyother one has such role
+            var users=await this.Manager.GetUsersInRoleAsync("Admin");
+            if (users.Count == 1 && users.First().Id==requestUsertodeleted.Id) {
+                resultDTO.IsSuccess = false;
+                resultDTO.IdentityError = new List<IdentityErrorDTO> {
+                    new IdentityErrorDTO{ Code="000", Description="Cannot delete last admin user" }
+                };
+                return resultDTO;
+            }
+            var result = await this.Manager.DeleteAsync(requestUsertodeleted);
+            if (!result.Succeeded)
+            {
+                resultDTO.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors);
+                return resultDTO;
+            }
+            resultDTO.IsSuccess = true;
+            return resultDTO;
+        }
+        public async Task<ResultDTO<IdentityUserDTO>> UpdateUser(IdentityUserDTO userDto, string updatedPassword)
         {
             var resultDTO = new ResultDTO<IdentityUserDTO>();
             if (!string.IsNullOrEmpty(userDto.PasswordHash))
@@ -245,6 +327,17 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 
                     if (resultDTO.IsSuccess)
                     {
+                        //find reset password if it is needed
+                        if (!string.IsNullOrEmpty(updatedPassword))
+                        {
+                            var resetToken = await this.Manager.GeneratePasswordResetTokenAsync(updatedUserIncomgin);
+                            await this.Manager.ResetPasswordAsync(updatedUserIncomgin, resetToken, updatedPassword);
+                        }
+                        if(!(await this.Manager.IsEmailConfirmedAsync(updatedUserIncomgin)))
+                        {
+                            var emailconfirmToken = await this.Manager.GenerateEmailConfirmationTokenAsync(updatedUserIncomgin);
+                            await this.Manager.ConfirmEmailAsync(updatedUserIncomgin, emailconfirmToken);
+                        }
                         var createdUser2 = await this.Manager.FindByIdAsync(userDto.Id);
                         resultDTO.ReturnObject = this.Mapper.Map<IdentityUserDTO>(createdUser2);
                         resultDTO.ReturnObject.Roles = (await this.Manager.GetRolesAsync(createdUser2)).ToList();
