@@ -1,0 +1,77 @@
+﻿@model UserForCreationModel
+@{
+    ViewData["Title"] = "AddUser";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["RolesChoice"] = Model.AvailableRoles.Select(r => new SelectListItem
+    {
+        Value = r.Value,
+        Text = r.Value
+    });
+}
+
+<!-- Page Heading -->
+<h1 class="h3 mb-4 text-gray-800">Add User</h1>
+
+<div class="row">
+    <div class="col-lg-6">
+
+        <!-- Default Card Example -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Add User
+            </div>
+
+            <div class="card-body">
+                <form method="post" asp-controller="Admin">
+                    <input type="hidden" asp-for="@Model.UserId" />
+                    <input type="hidden" asp-for="@Model.ConconcurrenyStamp" />
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <div class="form-group">
+                        @{ if (string.IsNullOrEmpty(Model.UserId))
+                            {
+                                <input type="email" asp-for="Email" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="Enter Email Address...">
+                            }
+                            else
+                            {
+                                <input type="email" asp-for="Email" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="Enter Email Address..." readonly>
+                            }
+                        }
+
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" asp-for="Password" class="form-control form-control-user" placeholder="Password">
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" asp-for="ConfirmPassword" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="Re-Enter Password">
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" asp-for="Phone" class="form-control form-control-user" placeholder="Enter Phone Number...">
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control" asp-for="@Model.Roles" asp-items="@(ViewData["RolesChoice"] as IEnumerable<SelectListItem>)"></select>
+                        <span asp-validation-for="@Model.Roles" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-user btn-block" asp-action="addorupdate">@(string.IsNullOrEmpty(Model.UserId)?"Create":"Update")</button>
+                    @{ if (!string.IsNullOrEmpty(Model.UserId))
+                        {
+                            <button type="submit" class="btn btn-secondary btn-user btn-block" asp-action="deleteuser" formnovalidate onclick="return confirm('Are you sure you want to delete this user?');">Delete
+                            </button>
+                        }}
+                    <hr>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
+
+

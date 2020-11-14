@@ -9,7 +9,7 @@
 <!-- Page Heading -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Users</h1>
-    <a asp-controller="Admin" asp-action="AddUser" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Add User</a>
+    <a  asp-action="AddUser" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Add User</a>
 </div>
 
 <!-- DataTales Example -->
@@ -22,7 +22,7 @@
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>User ID</th>
+                        <th></th>
                         <th>Username</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -32,7 +32,7 @@
                 </thead>
                 <tfoot>
                     <tr>
-                        <th>User ID</th>
+                        <th></th>
                         <th>Username</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -45,7 +45,7 @@
                     @foreach (UserGridRowModel r in Model.GridData)
                     {
                         <tr>
-                            <td>@(r.UserId)</td>
+                            <td><a asp-action="user"  asp-route-id="@r.UserId">Modify</a></td>
                             <td>@(r.Username)</td>
                             <td>@(r.Email)</td>
                             <td>@(r.Phone)</td>

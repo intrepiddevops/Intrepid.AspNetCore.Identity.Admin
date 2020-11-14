@@ -47,6 +47,26 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             result.ReturnObject = aggregateCount;
             return result;
         }
+
+        public async Task<ResultDTO<IdentityRoleDTO>> DeleteRole(string roleId)
+        {
+            var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };
+            var deleterole = await this.Role.FindByIdAsync(roleId);
+
+            var deleteResult=await this.Role.DeleteAsync(deleterole);
+
+            if (deleteResult.Succeeded)
+            {
+                resultDto.IsSuccess = true;
+                //find the role
+                resultDto.ReturnObject = null;
+            }
+            else
+            {
+                resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(deleteResult.Errors.ToList());
+            }
+            return resultDto;
+        }
         public async Task<ResultDTO<IdentityRoleDTO>> CreateUpdateRole(IdentityRoleDTO role)
         {
             var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };
@@ -56,13 +76,16 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                 var findRole = await this.Role.FindByIdAsync(role.Id);
                 
                 var identityResult = new IdentityResult();
-                if (findRole!=null)
+                if (findRole != null)
                 {
                     this.Context.Entry(findRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
                     identityResult = await this.Role.UpdateAsync(identityRole);
                 }
                 else
+                {
+                    identityRole.Id = Guid.NewGuid().ToString();
                     identityResult = await this.Role.CreateAsync(identityRole);
+                }
                 if (identityResult.Succeeded)
                 {
                     resultDto.IsSuccess = true;

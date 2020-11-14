@@ -199,7 +199,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
             updateuserDTO.Roles.Add("UpdateIdentityUser1");
             updateuserDTO.PasswordHash = string.Empty;
             updateuserDTO.PhoneNumber = "12345";
-            result = await identityservice.UpdateUser(updateuserDTO);
+            result = await identityservice.UpdateUser(updateuserDTO, string.Empty);
 
             Assert.True(result.IsSuccess, "update user success failure");
             Assert.True(result.ReturnObject.Roles.First(x => x.Contains("UpdateIdentityUser1")) != null, "Cannot fine role");
@@ -208,7 +208,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.UnitTest.Repository
             updateuserDTO.PasswordHash = string.Empty;
             updateuserDTO.Roles.Clear();
             updateuserDTO.Roles.Add(Guid.NewGuid().ToString());
-            result = await identityservice.UpdateUser(updateuserDTO);
+            result = await identityservice.UpdateUser(updateuserDTO, string.Empty);
             Assert.False(result.IsSuccess, "update success expecting failure");
         }
     }

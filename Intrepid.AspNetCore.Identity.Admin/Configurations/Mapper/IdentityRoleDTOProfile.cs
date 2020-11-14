@@ -15,7 +15,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configurations.Mapper
             CreateMap<IdentityRoleDTO, RoleCountModel>()
                 .ForMember(x => x.Name, opt => opt.MapFrom(role => role.Name))
                 .ForMember(x => x.RoleId, opt => opt.MapFrom(role => role.Id))
-                .ForMember(x => x.Count, opt => opt.MapFrom(role => role.UserCount));
+                .ForMember(x => x.Count, opt => opt.MapFrom(role => role.UserCount))
+                .ForMember(x => x.ConcurrencyStamp, opt => opt.MapFrom(role => role.ConcurrencyStamp))
+                .ReverseMap();
         }
     }
 }

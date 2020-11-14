@@ -18,5 +18,11 @@ namespace Intrepid.AspNetCore.Identity.Admin.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+        public string ConconcurrenyStamp { get; set; }
+        public List<string> Roles { get; set; }
+
+        public Dictionary<string, string> AvailableRoles { get; set; }
+        
     }
 }

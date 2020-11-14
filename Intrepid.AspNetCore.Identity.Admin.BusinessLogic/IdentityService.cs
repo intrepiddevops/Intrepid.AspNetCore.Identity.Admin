@@ -86,6 +86,18 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return await query.ProjectTo<IdentityUserDTO>(this.Mapper.ConfigurationProvider).ToListAsync();
         }
 
+        public async Task<IdentityUserDTO> SearchUserByIdAsync(string id)
+        {
+            var query = Manager.Users.Where(x => x.Id == id);
+            var defaultUser = query.FirstOrDefault();
+            var user = this.Mapper.Map<IdentityUserDTO>(defaultUser);
+            //get the roles
+            var userRoles = await this.Manager.GetRolesAsync(defaultUser);
+
+            user.Roles = (await this.Manager.GetRolesAsync(defaultUser)).ToList();
+            return user;
+        }
+
         public async Task<IdentityUserMetaData> UsersMetaData()
         {
             var query = Manager.Users.AsQueryable();
@@ -141,8 +153,9 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
                             resultDto.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors.ToList());
                             throw new Exception("Role creation failed");
                         }
-                        
-
+                        //finally make sure the email is verified
+                        var emailConfirmToken=await this.Manager.GenerateEmailConfirmationTokenAsync(createdUser);
+                        await this.Manager.ConfirmEmailAsync(createdUser, emailConfirmToken);
                         resultDto.IsSuccess = true;
                     }
                     else
@@ -218,7 +231,38 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return resultDto;
         }
 
-        public async Task<ResultDTO<IdentityUserDTO>> UpdateUser(IdentityUserDTO userDto)
+        public async Task<ResultDTO<IdentityUserDTO>> DeleteUserAsync(string userId)
+        {
+            var resultDTO = new ResultDTO<IdentityUserDTO>();
+            //need to check if it is the last user who has admin role
+            var requestUsertodeleted = await this.Manager.FindByIdAsync(userId);
+            if (requestUsertodeleted == default)
+            {
+                resultDTO.IsSuccess = false;
+                resultDTO.IdentityError = new List<IdentityErrorDTO> { 
+                    new IdentityErrorDTO{ Code="000", Description="Cannot find user" }
+                };
+                return resultDTO;
+            }
+            //check if anyother one has such role
+            var users=await this.Manager.GetUsersInRoleAsync("Admin");
+            if (users.Count == 1 && users.First().Id==requestUsertodeleted.Id) {
+                resultDTO.IsSuccess = false;
+                resultDTO.IdentityError = new List<IdentityErrorDTO> {
+                    new IdentityErrorDTO{ Code="000", Description="Cannot delete last admin user" }
+                };
+                return resultDTO;
+            }
+            var result = await this.Manager.DeleteAsync(requestUsertodeleted);
+            if (!result.Succeeded)
+            {
+                resultDTO.IdentityError = this.Mapper.Map<List<IdentityErrorDTO>>(result.Errors);
+                return resultDTO;
+            }
+            resultDTO.IsSuccess = true;
+            return resultDTO;
+        }
+        public async Task<ResultDTO<IdentityUserDTO>> UpdateUser(IdentityUserDTO userDto, string updatedPassword)
         {
             var resultDTO = new ResultDTO<IdentityUserDTO>();
             if (!string.IsNullOrEmpty(userDto.PasswordHash))
@@ -283,6 +327,17 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
 
                     if (resultDTO.IsSuccess)
                     {
+                        //find reset password if it is needed
+                        if (!string.IsNullOrEmpty(updatedPassword))
+                        {
+                            var resetToken = await this.Manager.GeneratePasswordResetTokenAsync(updatedUserIncomgin);
+                            await this.Manager.ResetPasswordAsync(updatedUserIncomgin, resetToken, updatedPassword);
+                        }
+                        if(!(await this.Manager.IsEmailConfirmedAsync(updatedUserIncomgin)))
+                        {
+                            var emailconfirmToken = await this.Manager.GenerateEmailConfirmationTokenAsync(updatedUserIncomgin);
+                            await this.Manager.ConfirmEmailAsync(updatedUserIncomgin, emailconfirmToken);
+                        }
                         var createdUser2 = await this.Manager.FindByIdAsync(userDto.Id);
                         resultDTO.ReturnObject = this.Mapper.Map<IdentityUserDTO>(createdUser2);
                         resultDTO.ReturnObject.Roles = (await this.Manager.GetRolesAsync(createdUser2)).ToList();
