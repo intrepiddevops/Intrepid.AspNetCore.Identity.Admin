@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Intrepid.AspNetCore.Identity.Admin.Configuration;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -27,6 +28,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.Models
         [Required]
         public string Name { get; set; }
         public string ConcurrencyStamp { get; set; }
+        public List<CustomClaim> AvailableClaims { get; set; }
+        public List<string> SelectedClaims { get; set; }
         public int Count { get; set; }
     }
 }

@@ -32,5 +32,15 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configuration
     {
         public List<User> Users { get; set; }
         public List<Role> Roles { get; set; }
+        public List<CustomClaim> Claims { get; set; }
+    }
+
+    
+
+    public class CustomClaim
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string ClaimType { get; set; }
     }
 }

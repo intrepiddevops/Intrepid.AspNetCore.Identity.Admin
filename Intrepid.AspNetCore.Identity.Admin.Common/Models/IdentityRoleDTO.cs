@@ -11,8 +11,8 @@ namespace Intrepid.AspNetCore.Identity.Admin.Common.Models
         public string ConcurrencyStamp { get; set; }
         public string Name { get; set; }
         public string NormalizedName { get; set; }
-        public string ClaimType { get; set; }
-        public string ClaimValue { get; set; }
+        
+        public List<string> Claims { get; set; }
         public int UserCount { get; set; }
     }
 }

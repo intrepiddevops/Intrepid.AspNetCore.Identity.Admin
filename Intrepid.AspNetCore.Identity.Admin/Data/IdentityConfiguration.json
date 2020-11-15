@@ -109,5 +109,39 @@
       "Name": "Manager",
       "Claims": []
     }
+  ],
+  "Claims": [
+
+    {
+      "Description": "View User info",
+      "Name": "ViewUser",
+      "ClaimType": "User"
+    },
+
+    {
+      "Description": "Modify User info",
+      "Name": "ModifyUser",
+      "ClaimType": "User"
+    },
+    {
+      "Description": "Delete User info",
+      "Name": "DeleteUser",
+      "ClaimType": "User"
+    },
+    {
+      "Description": "View Group info",
+      "Name": "ViewGroup",
+      "ClaimType": "Group"
+    },
+    {
+      "Description": "Modify Group info",
+      "Name": "ModifyGroup",
+      "ClaimType": "Group"
+    },
+    {
+      "Description": "Delete Group",
+      "Name": "DeleteGroup",
+      "ClaimType": "Group"
+    }
   ]
 }

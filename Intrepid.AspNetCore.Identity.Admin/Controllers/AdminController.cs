@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Intrepid.AspNetCore.Identity.Admin.BusinessLogic;
 using AutoMapper;
 using Intrepid.AspNetCore.Identity.Admin.Common.Models;
+using Intrepid.AspNetCore.Identity.Admin.Configuration;
 
 namespace Intrepid.AspNetCore.Identity.Admin.Controllers
 {
@@ -23,11 +24,15 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
         public IMapper Mapper { get; }
         public IdentityService IdentityService { get; }
 
-        public AdminController(RoleService roleService, IMapper mapepr, IdentityService identityService)
+        private readonly IdentityDataConfiguration _identityConfiguration;
+
+        public AdminController(RoleService roleService, IMapper mapepr, 
+            IdentityService identityService, IdentityDataConfiguration identityConfiguration)
         {
             this.RoleService = roleService;
             this.Mapper = mapepr;
             this.IdentityService = identityService;
+            this._identityConfiguration = identityConfiguration;
         }
         /// <summary>
         /// Dashboard
@@ -221,12 +226,13 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
         public IActionResult AddRoleForm(RoleCountModel newRole)
         {
             var vm = new RoleCountModel();
+            vm.AvailableClaims = this._identityConfiguration.Claims;
             return View("RoleDetail", vm);
         }
         [HttpGet("role/{id}")]
         public async  Task<IActionResult> AddRoleForm(string id)
         {
-            var role = (await this.RoleService.AllRoleInfo()).ReturnObject.Where(x => x.Id == id).FirstOrDefault();
+            var role = (await this.RoleService.GetRole(id)).ReturnObject.Where(x => x.Id == id).FirstOrDefault();
             if (role == default)
                 return RedirectToAction("Roles");
             var vm = new RoleCountModel()
@@ -234,13 +240,16 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
                 RoleId = role.Id,
                 Name = role.Name,
                 Count = role.UserCount,
-                ConcurrencyStamp=role.ConcurrencyStamp
+                ConcurrencyStamp = role.ConcurrencyStamp,
+                SelectedClaims=role.Claims,
+                AvailableClaims = this._identityConfiguration.Claims
             };
             return View("RoleDetail", vm);
         }
         [HttpPost("addupdaterole")]
         public async Task<IActionResult> AddUpdateRole(RoleCountModel newRole)
         {
+            newRole.AvailableClaims = this._identityConfiguration.Claims;
             if (string.IsNullOrEmpty(newRole.Name))
                 return RedirectToAction("Roles");
             //check if the role existed already
@@ -252,7 +261,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
             //ok it has failed// publish to the model state
             this.ModelState.AddModelError(nameof(newRole.Name), string.Join(", ", result.ErrorMsg));
             this.ModelState.AddModelError(nameof(newRole.Name), string.Join(", ", result.IdentityError.Select(x=>x.Description)));
-            return View("RoleDetail");
+            return View("RoleDetail", newRole);
         }
         [HttpPost("deleterole")]
         public async Task<IActionResult> Delete(RoleCountModel vm)
@@ -270,17 +279,18 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
             this.ModelState.AddModelError(nameof(vm.Name), string.Join(", ", result.IdentityError.Select(x => x.Description)));
             return View("RoleDetail");
         }
+        [HttpGet("claims")]
         public IActionResult Claims()
         {
             ClaimsViewModel vm = new ClaimsViewModel();
 
-            foreach (FieldInfo field in typeof(ClaimTypes).GetFields())
+            foreach (var claim in this.User.Claims)
             {
                 vm.GridData.Add(new ClaimGridRowModel()
                 {
                     ClaimId = null,
-                    Name = field.Name,
-                    Value = (string)field.GetValue(null),
+                    Name = claim.Type,
+                    Value = claim.Value,
                     IsReadOnly = true
                 });
             }
@@ -289,7 +299,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
             {
                 PageSize = 10,
                 CurrentPage = 1,
-                TotalRecords = 2
+                TotalRecords = this.User.Claims.Count()
             };
 
             return View(vm);

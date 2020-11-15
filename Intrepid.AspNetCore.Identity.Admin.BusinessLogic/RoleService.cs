@@ -48,6 +48,38 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
             return result;
         }
 
+        public async Task<ResultDTO<List<IdentityRoleDTO>>> GetRole(string roleid)
+        {
+
+            var result = new ResultDTO<List<IdentityRoleDTO>>();
+            var aggregateCount = await (from role in this.Context.Roles
+                                        where role.Id==roleid
+                                        let cCount =
+                                        (
+                                           from c in Context.UserRoles
+                                           where role.Id == c.RoleId
+                                           select c
+                                        ).Count()
+                                        select new IdentityRoleDTO()
+                                        {
+                                            Id = role.Id,
+                                            Name = role.Name,
+                                            NormalizedName = role.NormalizedName,
+                                            ConcurrencyStamp = role.ConcurrencyStamp,
+                                            UserCount = cCount
+                                        }).ToListAsync();
+
+            //ok populate the claim
+            foreach(var role in aggregateCount)
+            {
+                var existingRole = await this.Role.FindByIdAsync(role.Id);
+                //populate the claim
+                role.Claims = (await this.Role.GetClaimsAsync(existingRole)).Select(x => x.Type + ";" + x.Value).ToList();
+            }
+            result.IsSuccess = true;
+            result.ReturnObject = aggregateCount;
+            return result;
+        }
         public async Task<ResultDTO<IdentityRoleDTO>> DeleteRole(string roleId)
         {
             var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };
@@ -70,27 +102,47 @@ namespace Intrepid.AspNetCore.Identity.Admin.BusinessLogic
         public async Task<ResultDTO<IdentityRoleDTO>> CreateUpdateRole(IdentityRoleDTO role)
         {
             var resultDto = new ResultDTO<IdentityRoleDTO> { IsSuccess = false };
-            var identityRole = this.Mapper.Map<ApplicationIdentityRole>(role);
+            
             try
             {
-                var findRole = await this.Role.FindByIdAsync(role.Id);
                 
+                var findRole = await this.Role.FindByIdAsync(role.Id);
+                ApplicationIdentityRole identityRole = null;
                 var identityResult = new IdentityResult();
                 if (findRole != null)
                 {
-                    this.Context.Entry(findRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-                    identityResult = await this.Role.UpdateAsync(identityRole);
+                    findRole.Name = role.Name;
+                    findRole.ConcurrencyStamp = role.ConcurrencyStamp;
+                    
+                    //this.Context.Entry(findRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                    identityResult = await this.Role.UpdateAsync(findRole);
+                    identityRole= await this.Role.FindByIdAsync(findRole.Id);
                 }
                 else
                 {
+                    identityRole = this.Mapper.Map<ApplicationIdentityRole>(role);
                     identityRole.Id = Guid.NewGuid().ToString();
                     identityResult = await this.Role.CreateAsync(identityRole);
                 }
                 if (identityResult.Succeeded)
                 {
+                    
+                    foreach (var existingClaim in (await this.Role.GetClaimsAsync(identityRole)))
+                        await this.Role.RemoveClaimAsync(identityRole, existingClaim);
+                    foreach(var newclaim in role.Claims)
+                    {
+                        string[] claimsplitvalue = newclaim.Split(';');
+                        if (claimsplitvalue.Count() == 2)
+                            await this.Role.AddClaimAsync(identityRole, new System.Security.Claims.Claim(claimsplitvalue[0], claimsplitvalue[1]));
+                    }
                     resultDto.IsSuccess = true;
+                    //before finish update claim
+
                     //find the role
-                    resultDto.ReturnObject = Mapper.Map<IdentityRoleDTO>(await this.Role.FindByIdAsync(role.Id));
+                    var therole = await this.Role.FindByIdAsync(identityRole.Id) ;
+                    resultDto.ReturnObject = Mapper.Map<IdentityRoleDTO>(therole);
+                    //before we continue, populcate hte claim
+                    resultDto.ReturnObject.Claims=(await this.Role.GetClaimsAsync(therole)).Select(x => x.Type + ";" + x.Value).ToList();
                 }
                 else
                 {

@@ -17,6 +17,7 @@ namespace Intrepid.AspNetCore.Identity.Admin.Configurations.Mapper
                 .ForMember(x => x.RoleId, opt => opt.MapFrom(role => role.Id))
                 .ForMember(x => x.Count, opt => opt.MapFrom(role => role.UserCount))
                 .ForMember(x => x.ConcurrencyStamp, opt => opt.MapFrom(role => role.ConcurrencyStamp))
+                .ForMember(x => x.SelectedClaims, opt => opt.MapFrom(role => role.Claims))
                 .ReverseMap();
         }
     }
