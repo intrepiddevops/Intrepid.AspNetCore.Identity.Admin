@@ -55,7 +55,7 @@
                         <select class="form-control" asp-for="@Model.Roles" asp-items="@(ViewData["RolesChoice"] as IEnumerable<SelectListItem>)"></select>
                         <span asp-validation-for="@Model.Roles" class="text-danger"></span>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-user btn-block" asp-action="addorupdate">@(string.IsNullOrEmpty(Model.UserId)?"Create":"Update")</button>
+                    <button type="submit" class="btn btn-primary btn-user btn-block" asp-action="addorupdate">@(string.IsNullOrEmpty(Model.UserId) ? "Create" : "Update")</button>
                     @{ if (!string.IsNullOrEmpty(Model.UserId))
                         {
                             <button type="submit" class="btn btn-secondary btn-user btn-block" asp-action="deleteuser" formnovalidate onclick="return confirm('Are you sure you want to delete this user?');">Delete
@@ -72,6 +72,15 @@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />
+    <script type="text/javascript">
+        var requirePassword = @(string.IsNullOrEmpty(Model.UserId)?"true":"false");
+        $(function () {
+            if (!requirePassword) {
+                $('#Password').rules('remove', 'required')
+            }
+        });
+     
+        
+       </script>
 }
-
 

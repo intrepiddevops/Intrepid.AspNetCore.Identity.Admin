@@ -101,6 +101,10 @@ namespace Intrepid.AspNetCore.Identity.Admin.Controllers
         {
             var roles = await this.RoleService.AllRoleInfo();
             vm.AvailableRoles = roles.ReturnObject.ToDictionary(x => x.Id, x => x.Name);
+            if (!string.IsNullOrEmpty(vm.UserId))
+            {
+                ModelState.Remove(nameof(vm.Password));
+            }
             if (!ModelState.IsValid)
                 return View("UserDetail", vm);
             vm.Username = vm.Email;
